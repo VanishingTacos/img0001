@@ -14,7 +14,6 @@ bluesky_password = os.getenv("BLUESKY_PASSWORD")
 
 # Function to fetch YouTube video details
 def fetch_youtube_vid(random_vid_id):
-    youtube_api_key = youtube_api_key  # Replace with your actual API key
     url = f'https://www.googleapis.com/youtube/v3/videos?part=snippet&id={random_vid_id}&key={youtube_api_key}'
 
     try:
@@ -29,8 +28,9 @@ def fetch_youtube_vid(random_vid_id):
     if items:
         snippet = items[0]["snippet"]
         title = snippet["title"]
+        thumbnail_url = snippet["thumbnails"]["high"]["url"]  # Use "high" for better resolution
         description = snippet["description"]
-        return title, description
+        return title, description, thumbnail_url
     else:
         print("No video found for the given ID.")
         exit()
@@ -69,21 +69,47 @@ if random_vid.status_code == 200:
         print("No 'published' date found in the response.")
         exit()
 
-    title, description = fetch_youtube_vid(random_vid_id)
+    title, description, thumbnail = fetch_youtube_vid(random_vid_id)
+
+    # Download the thumbnail image
+    thumbnail_path = "thumbnail.jpg"
+    try:
+        response = requests.get(thumbnail, stream=True)
+        response.raise_for_status()
+        with open(thumbnail_path, "wb") as f:
+            for chunk in response.iter_content(1024):
+                f.write(chunk)
+    except requests.exceptions.RequestException as e:
+        print(f"Error downloading thumbnail: {e}")
+        exit()
 
     # Initialize the Bluesky client
     client = Client()
-    client.login(bluesky_username, bluesky_password)  # Replace with your actual credentials
+    client.login(bluesky_username, bluesky_password)
+
+    # Upload the thumbnail image as a blob
+    try:
+        with open(thumbnail_path, "rb") as f:
+            img_data = f.read()
+            thumb = client.upload_blob(img_data)  # Correct usage of `upload_blob` on the instance
+    except Exception as e:
+        print(f"Failed to upload thumbnail: {e}")
+        exit()
 
     # Create the post with an external link embed
-    post_content = f'{title}\nViews: {random_vid_views}\nPublished: {human_readable_date}\n\n{random_vid_url}'
+    post_content = f'📹 {title}\n👁 Views: {random_vid_views}\n📅 Published: {human_readable_date}\n\n🔗 {random_vid_url}'
     embed = {
         "$type": "app.bsky.embed.external",
         "external": {
             "uri": random_vid_url,
             "title": title,
-            "description": description
+            "description": description,
+            "thumb": thumb["blob"]  # Correctly using the returned blob
         }
     }
 
-    post = client.send_post(text=post_content, embed=embed)
+    # Send the post
+    try:
+        post = client.send_post(text=post_content, embed=embed)
+    except Exception as e:
+        print(f"Failed to create post: {e}")
