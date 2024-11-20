@@ -4,4 +4,4 @@ Uses the [IMG_0001 API](https://walzr.com/IMG_0001/random) to get a random video
 
 ## Credits
 * [Riley Walz](https://x.com/rtwlz) - for createing https://walzr.com/IMG_0001 and it's API.
-* nVanishingTacos
+* VanishingTacos
