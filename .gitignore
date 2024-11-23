@@ -1,2 +1,4 @@
 .env
 thumbnail.jpg
+__pycache__/
+test.py
