@@ -8,6 +8,7 @@ load_dotenv()
 # Access the environment variables
 youtube_api_key = os.getenv("YOUTUBE_API_KEY")
 
+
 # Function to fetch YouTube video details
 def fetch_youtube_vid(random_vid_id):
     url = f"https://www.googleapis.com/youtube/v3/videos?part=snippet&id={random_vid_id}&key={youtube_api_key}"
