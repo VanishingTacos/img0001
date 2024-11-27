@@ -61,7 +61,8 @@ def main():
     title, description, thumbnail, channel_title = fetch_youtube_vid(random_vid_id)
 
     # Download the thumbnail image
-    thumbnail_path = "thumbnail.jpg"
+    find_path = os.path.dirname(os.path.abspath(__file__))
+    thumbnail_path = os.path.join(find_path, 'thumbnail.jpg')
     try:
         response = requests.get(thumbnail, stream=True)
         response.raise_for_status()
